@@ -1,8 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { PROMPT_CATEGORIES } from '../../data/prompts'
-import { formatDate } from '../../utils/helpers'
-
-const MOOD_EMOJIS = ['', '😔', '😕', '😐', '🙂', '😊']
+import { formatDate, MOOD_EMOJIS } from '../../utils/helpers'
 
 const CATEGORY_COLORS = {
   'self-awareness': 'text-violet-400',

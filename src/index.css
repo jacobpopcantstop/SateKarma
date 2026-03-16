@@ -131,3 +131,14 @@ body::after {
   to   { opacity: 1; transform: translateY(0); }
 }
 .fade-up { animation: fade-up 0.4s ease both; }
+
+/* ─── Safe area bottom padding (iPhone notch) ────────────── */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
+
+/* ─── Reduced motion ─────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  body::before, body::after, #root::before {
+    animation: none;
+  }
+  .fade-up { animation: none; }
+}

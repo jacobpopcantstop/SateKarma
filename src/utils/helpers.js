@@ -1,5 +1,11 @@
 /** Shared utilities used across multiple files */
 
+export const MOOD_EMOJIS = ['', '😔', '😕', '😐', '🙂', '😊']
+export const MOOD_LABELS = ['', 'Low', 'Meh', 'Okay', 'Good', 'Great']
+
+const ONE_DAY_MS = 864e5
+export { ONE_DAY_MS }
+
 export function generateId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
 }

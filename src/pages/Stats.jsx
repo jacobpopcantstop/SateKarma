@@ -6,7 +6,7 @@ const LEVELS = [
   { name: 'Sprout', emoji: '🌿', min: 30, max: 120 },
   { name: 'Sapling', emoji: '🌳', min: 120, max: 300 },
   { name: 'Tree', emoji: '🌲', min: 300, max: 600 },
-  { name: 'Forest', emoji: '🌲', min: 600, max: Infinity },
+  { name: 'Forest', emoji: '🌲🌲', min: 600, max: Infinity },
 ]
 
 function currentLevel(minutes) {

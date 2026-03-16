@@ -1,17 +1,19 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { PROMPT_CATEGORIES } from '../data/prompts'
-import { formatDateLong, formatDate } from '../utils/helpers'
+import { formatDateLong, formatDate, MOOD_EMOJIS, MOOD_LABELS } from '../utils/helpers'
 import Button from '../components/ui/Button'
-
-const MOOD_EMOJIS = ['', '😔', '😕', '😐', '🙂', '😊']
-const MOOD_LABELS = ['', 'Low', 'Meh', 'Okay', 'Good', 'Great']
 
 export default function JournalEntryView() {
   const { id } = useParams()
   const { state, dispatch } = useApp()
   const navigate = useNavigate()
   const entry = state.journalEntries.find(e => e.id === id)
+
+  const [isEditing, setIsEditing] = useState(false)
+  const [editText, setEditText] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   if (!entry) {
     return (
@@ -33,6 +35,22 @@ export default function JournalEntryView() {
     if (entry.prompt?.text) {
       dispatch({ type: 'TOGGLE_FAVORITE_PROMPT', payload: { text: entry.prompt.text } })
     }
+  }
+
+  function startEdit() {
+    setEditText(entry.response)
+    setIsEditing(true)
+  }
+
+  function saveEdit() {
+    if (!editText.trim()) return
+    dispatch({ type: 'UPDATE_JOURNAL_ENTRY', payload: { id: entry.id, response: editText.trim() } })
+    setIsEditing(false)
+  }
+
+  function handleDelete() {
+    dispatch({ type: 'DELETE_JOURNAL_ENTRY', payload: { id: entry.id } })
+    navigate('/journal', { replace: true })
   }
 
   function exportEntry() {
@@ -64,12 +82,24 @@ export default function JournalEntryView() {
         >
           ← Back
         </button>
-        <button
-          className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
-          onClick={exportEntry}
-        >
-          Export
-        </button>
+        <div className="flex items-center gap-3">
+          {!isEditing && (
+            <>
+              <button
+                className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
+                onClick={startEdit}
+              >
+                Edit
+              </button>
+              <button
+                className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
+                onClick={exportEntry}
+              >
+                Export
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Date & mood */}
@@ -102,13 +132,68 @@ export default function JournalEntryView() {
         <p className="text-xs text-slate-500 mb-4 italic">Free write</p>
       )}
 
-      {/* Response */}
-      <div className="text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">
-        {entry.response}
-      </div>
+      {/* Response / Edit */}
+      {isEditing ? (
+        <div className="flex flex-col gap-3">
+          <textarea
+            className="w-full bg-white/5 border border-violet-400/40 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-violet-400/70 resize-none leading-relaxed"
+            rows={10}
+            value={editText}
+            onChange={e => setEditText(e.target.value)}
+            autoFocus
+          />
+          <p className="text-xs text-slate-600 text-right">
+            {editText.trim().split(/\s+/).filter(Boolean).length} words
+          </p>
+          <div className="flex gap-2">
+            <Button variant="primary" size="md" className="flex-1" onClick={saveEdit} disabled={!editText.trim()}>
+              Save changes
+            </Button>
+            <Button variant="ghost" size="md" className="flex-1" onClick={() => setIsEditing(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">
+          {entry.response}
+        </div>
+      )}
+
+      {/* Delete */}
+      {!isEditing && (
+        <div className="mt-10 border-t border-white/10 pt-6">
+          {confirmDelete ? (
+            <div className="flex items-center gap-3">
+              <p className="text-xs text-slate-400 flex-1">Delete this entry permanently?</p>
+              <button
+                className="text-xs text-rose-400 hover:text-rose-300 transition-colors"
+                onClick={handleDelete}
+              >
+                Delete
+              </button>
+              <button
+                className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                onClick={() => setConfirmDelete(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
+              onClick={() => setConfirmDelete(true)}
+            >
+              Delete entry
+            </button>
+          )}
+        </div>
+      )}
 
       {/* On this day */}
-      <OnThisDay currentId={entry.id} date={entry.date} entries={state.journalEntries} />
+      {!isEditing && (
+        <OnThisDay currentId={entry.id} date={entry.date} entries={state.journalEntries} />
+      )}
     </div>
   )
 }
@@ -129,7 +214,6 @@ function OnThisDay({ currentId, date, entries }) {
         {pastEntries.map(e => (
           <div key={e.id} className="text-sm">
             <p className="text-slate-500 mb-1">{formatDate(e.date)}</p>
-
             <p className="text-slate-400 line-clamp-2">{e.response}</p>
           </div>
         ))}
@@ -137,4 +221,3 @@ function OnThisDay({ currentId, date, entries }) {
     </div>
   )
 }
-

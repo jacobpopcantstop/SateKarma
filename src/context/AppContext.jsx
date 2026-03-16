@@ -159,6 +159,25 @@ function reducer(state, action) {
         },
       }
 
+    case 'DELETE_JOURNAL_ENTRY':
+      return {
+        ...state,
+        journalEntries: state.journalEntries.filter(e => e.id !== action.payload.id),
+      }
+
+    case 'DELETE_SESSION': {
+      const deleted = state.sessions.find(s => s.id === action.payload.id)
+      const minutesRemoved = deleted ? Math.floor(deleted.duration / 60) : 0
+      return {
+        ...state,
+        sessions: state.sessions.filter(s => s.id !== action.payload.id),
+        stats: {
+          totalSessions: Math.max(0, state.stats.totalSessions - 1),
+          totalMinutes: Math.max(0, state.stats.totalMinutes - minutesRemoved),
+        },
+      }
+    }
+
     case 'UPDATE_SETTINGS':
       return { ...state, settings: { ...state.settings, ...action.payload } }
 
