@@ -2,7 +2,7 @@ import Button from '../ui/Button'
 
 export default function TimerControls({ status, onStart, onPause, onResume, onStop }) {
   return (
-    <div className="flex items-center gap-4 mt-8">
+    <div className="flex items-center gap-4 mt-10">
       {status === 'idle' && (
         <Button variant="primary" size="xl" onClick={onStart}>
           Begin
@@ -14,7 +14,7 @@ export default function TimerControls({ status, onStart, onPause, onResume, onSt
             Pause
           </Button>
           <Button variant="ghost" size="md" onClick={onStop}>
-            End early
+            End
           </Button>
         </>
       )}

@@ -36,16 +36,12 @@ export default function MeditateTimer() {
     setSessionComplete(true)
   }
 
-  function handleIntervalBell() {
-    playBell(state.settings.bellSound)
-  }
-
   const durationSeconds = duration * 60
   const { secondsLeft, progress, status, start, pause, resume, stop } = useTimer(
     durationSeconds,
     handleComplete,
     intervalSecs,
-    handleIntervalBell,
+    () => playBell(state.settings.bellSound),
   )
 
   function handleStart() {
@@ -76,14 +72,18 @@ export default function MeditateTimer() {
     const secs = completedSession.duration % 60
     const timeStr = secs > 0 ? `${mins}m ${secs}s` : `${mins} minute${mins !== 1 ? 's' : ''}`
     return (
-      <div className="min-h-screen pb-24 px-4 pt-12 max-w-lg mx-auto flex flex-col items-center justify-center text-center">
-        <div className="w-20 h-20 rounded-full bg-violet-500/20 flex items-center justify-center mb-6">
-          <span className="text-4xl">🔔</span>
+      <div className="min-h-screen pb-36 flex flex-col items-center justify-center px-6 text-center fade-up">
+        {/* Completion glow */}
+        <div className="relative mb-8">
+          <div className="absolute inset-0 rounded-full bg-violet-500/20 blur-2xl scale-150" />
+          <div className="relative w-24 h-24 rounded-full glass flex items-center justify-center glow-violet">
+            <span className="text-4xl">🔔</span>
+          </div>
         </div>
-        <h2 className="text-2xl font-semibold text-white mb-2">Session complete</h2>
-        <p className="text-slate-400 text-sm mb-10">
-          {timeStr} of stillness. Well done.
-        </p>
+
+        <h2 className="text-3xl font-light text-white mb-2 tracking-tight">Session complete</h2>
+        <p className="text-white/40 mb-10 text-sm tracking-wide">{timeStr} of stillness</p>
+
         <div className="flex flex-col gap-3 w-full max-w-xs">
           <Button
             variant="primary"
@@ -97,10 +97,7 @@ export default function MeditateTimer() {
             variant="secondary"
             size="lg"
             className="w-full"
-            onClick={() => {
-              setSessionComplete(false)
-              setCompletedSession(null)
-            }}
+            onClick={() => { setSessionComplete(false); setCompletedSession(null) }}
           >
             Meditate again
           </Button>
@@ -112,11 +109,25 @@ export default function MeditateTimer() {
     )
   }
 
-  return (
-    <div className="min-h-screen pb-24 px-4 pt-12 max-w-lg mx-auto flex flex-col items-center">
-      <h1 className="text-xl font-medium text-slate-300 mb-8">Meditation</h1>
+  const isRunning = status === 'running'
 
-      <div className="mb-8 w-full">
+  return (
+    <div className="min-h-screen pb-36 flex flex-col items-center px-4 pt-12">
+      {/* Title — fades out while running */}
+      <h1
+        className={`text-sm font-medium tracking-[0.25em] uppercase text-white/40 mb-10 transition-opacity duration-500 ${
+          isRunning ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
+        Meditation
+      </h1>
+
+      {/* Duration picker */}
+      <div
+        className={`mb-10 w-full max-w-sm transition-all duration-500 ${
+          status !== 'idle' ? 'opacity-0 pointer-events-none h-0 mb-0 overflow-hidden' : 'opacity-100'
+        }`}
+      >
         <TimerSettings
           duration={duration}
           onDurationChange={setDuration}
@@ -124,13 +135,17 @@ export default function MeditateTimer() {
         />
       </div>
 
-      <TimerRing progress={progress} secondsLeft={secondsLeft} />
+      {/* Ring */}
+      <div className={`transition-all duration-700 ${isRunning ? 'mt-8' : ''}`}>
+        <TimerRing progress={progress} secondsLeft={secondsLeft} />
+      </div>
 
-      <p className="text-sm text-slate-400 mt-4 h-5">
-        {status === 'idle' && 'Choose a duration and begin'}
-        {status === 'running' && "You're doing great."}
-        {status === 'paused' && 'Paused — resume when ready'}
-        {status === 'done' && 'Complete'}
+      {/* Status hint */}
+      <p className="text-sm text-white/25 mt-6 h-5 tracking-widest uppercase text-center">
+        {status === 'idle' && 'choose a duration'}
+        {status === 'running' && ''}
+        {status === 'paused' && 'paused'}
+        {status === 'done' && 'complete'}
       </p>
 
       <TimerControls
@@ -143,7 +158,7 @@ export default function MeditateTimer() {
 
       {status === 'idle' && (
         <button
-          className="mt-8 text-sm text-slate-500 hover:text-teal-400 transition-colors"
+          className="mt-10 text-xs text-white/25 hover:text-teal-400/80 transition-colors tracking-widest uppercase"
           onClick={() => navigate('/breathe')}
         >
           Breathe first →

@@ -8,10 +8,10 @@ export default function TimerSettings({ duration, onDurationChange, disabled }) 
           key={d}
           disabled={disabled}
           onClick={() => onDurationChange(d)}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 disabled:opacity-40 ${
+          className={`px-4 py-2 rounded-2xl text-sm font-medium transition-all duration-200 disabled:opacity-30 ${
             duration === d
-              ? 'bg-violet-600 text-white'
-              : 'bg-white/10 text-slate-300 hover:bg-white/20'
+              ? 'bg-violet-600/80 text-white shadow-lg shadow-violet-900/50'
+              : 'glass text-white/40 hover:text-white/70'
           }`}
         >
           {d}m
