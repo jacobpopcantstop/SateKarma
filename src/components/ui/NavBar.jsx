@@ -10,23 +10,31 @@ const navItems = [
 
 export default function NavBar() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0f0a1e]/90 backdrop-blur border-t border-white/10">
-      <ul className="flex justify-around items-center max-w-lg mx-auto px-2 py-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0f0a1e]/95 backdrop-blur-md border-t border-white/10">
+      <ul className="flex justify-around items-center max-w-lg mx-auto px-1 py-2">
         {navItems.map(({ to, label, icon: Icon }) => (
           <li key={to} className="flex-1">
             <NavLink
               to={to}
               end={to === '/'}
               className={({ isActive }) =>
-                `flex flex-col items-center gap-0.5 py-1 px-2 rounded-xl transition-colors duration-150 ${
-                  isActive
-                    ? 'text-violet-400'
-                    : 'text-slate-500 hover:text-slate-300'
+                `relative flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-xl transition-all duration-200 ${
+                  isActive ? 'text-violet-400' : 'text-slate-500 hover:text-slate-300'
                 }`
               }
             >
-              <Icon className="w-5 h-5" />
-              <span className="text-[10px] font-medium">{label}</span>
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <span className="absolute inset-0 rounded-xl bg-violet-500/10" />
+                  )}
+                  <Icon className="w-5 h-5 relative" />
+                  <span className="text-[10px] font-medium relative">{label}</span>
+                  {isActive && (
+                    <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-violet-400" />
+                  )}
+                </>
+              )}
             </NavLink>
           </li>
         ))}
@@ -35,7 +43,6 @@ export default function NavBar() {
   )
 }
 
-// Inline SVG icon components
 function HomeIcon({ className }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>

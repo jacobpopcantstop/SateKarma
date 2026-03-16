@@ -1,21 +1,27 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 
 /**
- * useTimer — manages a countdown timer with pause/resume.
- * @param {number} durationSeconds - total session duration in seconds
- * @param {function} onComplete - called when timer reaches 0
+ * useTimer — countdown timer with pause/resume and interval callbacks.
+ * @param {number} durationSeconds   - total session duration in seconds
+ * @param {function} onComplete      - called when timer reaches 0
+ * @param {number|null} intervalSecs - fire onInterval every N seconds (optional)
+ * @param {function} onInterval      - called at each interval mark (optional)
  */
-export function useTimer(durationSeconds, onComplete) {
+export function useTimer(durationSeconds, onComplete, intervalSecs = null, onInterval = null) {
   const [secondsLeft, setSecondsLeft] = useState(durationSeconds)
   const [status, setStatus] = useState('idle') // idle | running | paused | done
   const intervalRef = useRef(null)
+  const elapsedRef = useRef(0)
   const onCompleteRef = useRef(onComplete)
+  const onIntervalRef = useRef(onInterval)
   onCompleteRef.current = onComplete
+  onIntervalRef.current = onInterval
 
   // Reset when duration changes
   useEffect(() => {
     setSecondsLeft(durationSeconds)
     setStatus('idle')
+    elapsedRef.current = 0
     clearInterval(intervalRef.current)
   }, [durationSeconds])
 
@@ -27,6 +33,11 @@ export function useTimer(durationSeconds, onComplete) {
     if (status === 'done') return
     setStatus('running')
     intervalRef.current = setInterval(() => {
+      elapsedRef.current += 1
+      // Fire interval bell if configured
+      if (intervalSecs && elapsedRef.current % intervalSecs === 0) {
+        onIntervalRef.current?.()
+      }
       setSecondsLeft(prev => {
         if (prev <= 1) {
           clearInterval(intervalRef.current)
@@ -37,7 +48,7 @@ export function useTimer(durationSeconds, onComplete) {
         return prev - 1
       })
     }, 1000)
-  }, [status])
+  }, [status, intervalSecs])
 
   const pause = useCallback(() => {
     clearInterval(intervalRef.current)
@@ -52,6 +63,7 @@ export function useTimer(durationSeconds, onComplete) {
   const stop = useCallback(() => {
     clearInterval(intervalRef.current)
     setStatus('idle')
+    elapsedRef.current = 0
     setSecondsLeft(durationSeconds)
   }, [durationSeconds])
 

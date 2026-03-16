@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { PROMPT_CATEGORIES } from '../../data/prompts'
+import { formatDate } from '../../utils/helpers'
 
 const MOOD_EMOJIS = ['', '😔', '😕', '😐', '🙂', '😊']
 
@@ -44,7 +45,3 @@ export default function JournalEntry({ entry }) {
   )
 }
 
-function formatDate(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00')
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}

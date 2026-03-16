@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="8" fill="#1a1040"/>
+  <!-- Simple meditation circle with inner dot -->
+  <circle cx="16" cy="16" r="10" fill="none" stroke="#7c3aed" stroke-width="2"/>
+  <circle cx="16" cy="16" r="3" fill="#a78bfa"/>
+  <!-- Small arc suggesting lotus petals -->
+  <path d="M10 19 Q16 13 22 19" fill="none" stroke="#5eead4" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

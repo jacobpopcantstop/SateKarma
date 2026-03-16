@@ -2,14 +2,11 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { pickPrompt } from '../utils/promptPicker'
+import { generateId } from '../utils/helpers'
 import MoodPicker from '../components/Journal/MoodPicker'
 import PromptCard from '../components/Journal/PromptCard'
 import JournalEditor from '../components/Journal/JournalEditor'
 import Button from '../components/ui/Button'
-
-function generateId() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36)
-}
 
 export default function JournalWrite() {
   const { state, dispatch } = useApp()
@@ -25,7 +22,6 @@ export default function JournalWrite() {
 
   function handleMoodNext() {
     if (!moodScore) return
-    // Pick prompt now that we have the mood score
     setActivePrompt(
       pickPrompt(
         state.journalSettings.lastUsedPrompts,
@@ -57,10 +53,21 @@ export default function JournalWrite() {
   if (step === 'mood') {
     return (
       <div className="min-h-screen pb-24 px-4 pt-12 max-w-lg mx-auto flex flex-col">
-        <h1 className="text-xl font-medium text-slate-300 mb-10 text-center">Check in</h1>
-        <div className="flex-1 flex flex-col items-center justify-center gap-10">
+        {/* Back */}
+        <button
+          className="self-start text-sm text-slate-400 hover:text-slate-200 transition-colors mb-8"
+          onClick={() => navigate(-1)}
+        >
+          ← Back
+        </button>
+
+        <h1 className="text-xl font-medium text-slate-300 mb-2 text-center">How are you feeling?</h1>
+        <p className="text-sm text-slate-500 text-center mb-10">Before we dive in</p>
+
+        <div className="flex-1 flex flex-col items-center justify-center">
           <MoodPicker value={moodScore} onChange={setMoodScore} />
         </div>
+
         <Button
           variant="primary"
           size="lg"
@@ -76,9 +83,16 @@ export default function JournalWrite() {
 
   return (
     <div className="min-h-screen pb-24 px-4 pt-12 max-w-lg mx-auto flex flex-col gap-4">
+      {/* Back */}
+      <button
+        className="self-start text-sm text-slate-400 hover:text-slate-200 transition-colors"
+        onClick={() => setStep('mood')}
+      >
+        ← Back
+      </button>
+
       <h1 className="text-xl font-medium text-slate-300 text-center">Reflect</h1>
 
-      {/* Prompt */}
       {!isFreeWrite ? (
         <PromptCard
           prompt={activePrompt}
@@ -98,18 +112,16 @@ export default function JournalWrite() {
         </div>
       )}
 
-      {/* Editor */}
       <JournalEditor
         value={response}
         onChange={setResponse}
         placeholder={
           isFreeWrite
             ? "Write whatever's on your mind..."
-            : `${activePrompt?.text || 'Write freely...'}`
+            : activePrompt?.text || 'Write freely...'
         }
       />
 
-      {/* Word count */}
       <p className="text-xs text-slate-600 text-right">
         {response.trim().split(/\s+/).filter(Boolean).length} words
       </p>

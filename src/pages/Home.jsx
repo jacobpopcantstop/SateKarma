@@ -3,113 +3,16 @@ import { useApp } from '../context/AppContext'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 
-function level(totalMinutes) {
-  if (totalMinutes < 30) return { name: 'Seed', next: 30 }
-  if (totalMinutes < 120) return { name: 'Sprout', next: 120 }
-  if (totalMinutes < 300) return { name: 'Sapling', next: 300 }
-  if (totalMinutes < 600) return { name: 'Tree', next: 600 }
-  return { name: 'Forest', next: null }
-}
+const LEVELS = [
+  { name: 'Seed', emoji: '🌱', min: 0, max: 30 },
+  { name: 'Sprout', emoji: '🌿', min: 30, max: 120 },
+  { name: 'Sapling', emoji: '🌳', min: 120, max: 300 },
+  { name: 'Tree', emoji: '🌲', min: 300, max: 600 },
+  { name: 'Forest', emoji: '🌲🌲', min: 600, max: Infinity },
+]
 
-export default function Home() {
-  const { state } = useApp()
-  const navigate = useNavigate()
-  const { streak, stats } = state
-  const { name: levelName, next } = level(stats.totalMinutes)
-
-  const today = new Date().toISOString().slice(0, 10)
-  const meditatedToday = state.sessions.some(s => s.date === today)
-  const journaledToday = state.journalEntries.some(e => e.date === today)
-
-  return (
-    <div className="min-h-screen pb-24 px-4 pt-12 max-w-lg mx-auto">
-      {/* Greeting */}
-      <div className="mb-8">
-        <p className="text-slate-400 text-sm">Good {greeting()}</p>
-        <h1 className="text-2xl font-semibold text-white mt-0.5">SateKarma</h1>
-      </div>
-
-      {/* Quick start */}
-      <Card className="p-6 mb-4 text-center">
-        <p className="text-slate-400 text-sm mb-1">Ready to sit?</p>
-        <Button
-          variant="primary"
-          size="xl"
-          className="w-full mt-3"
-          onClick={() => navigate('/timer')}
-        >
-          Start Meditation
-        </Button>
-        <button
-          className="mt-3 text-sm text-slate-400 hover:text-teal-400 transition-colors"
-          onClick={() => navigate('/breathe')}
-        >
-          Just breathe first →
-        </button>
-      </Card>
-
-      {/* Today's status */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <Card className="p-4 flex flex-col gap-1">
-          <span className="text-xs text-slate-400">Meditated</span>
-          <span className={`text-lg font-semibold ${meditatedToday ? 'text-teal-400' : 'text-slate-500'}`}>
-            {meditatedToday ? 'Done ✓' : 'Not yet'}
-          </span>
-        </Card>
-        <Card className="p-4 flex flex-col gap-1">
-          <span className="text-xs text-slate-400">Journaled</span>
-          <span className={`text-lg font-semibold ${journaledToday ? 'text-violet-400' : 'text-slate-500'}`}>
-            {journaledToday ? 'Done ✓' : 'Not yet'}
-          </span>
-        </Card>
-      </div>
-
-      {/* Streak & stats */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-bold text-amber-400">{streak.current}</div>
-          <div className="text-xs text-slate-400 mt-0.5">Day streak</div>
-        </Card>
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-bold text-violet-400">{stats.totalSessions}</div>
-          <div className="text-xs text-slate-400 mt-0.5">Sessions</div>
-        </Card>
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-bold text-teal-400">{stats.totalMinutes}</div>
-          <div className="text-xs text-slate-400 mt-0.5">Minutes</div>
-        </Card>
-      </div>
-
-      {/* Level */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-white">Level: {levelName}</span>
-          {next && <span className="text-xs text-slate-400">{next - stats.totalMinutes} min to {nextLevel(levelName)}</span>}
-        </div>
-        {next && (
-          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-violet-500 to-teal-400 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min((stats.totalMinutes / next) * 100, 100)}%` }}
-            />
-          </div>
-        )}
-      </Card>
-
-      {/* Journal nudge */}
-      {meditatedToday && !journaledToday && (
-        <Card
-          className="mt-4 p-4 border-violet-500/30 cursor-pointer hover:border-violet-400/50 transition-colors"
-          onClick={() => navigate('/journal/write')}
-        >
-          <p className="text-sm text-slate-300">
-            <span className="text-violet-400 font-medium">Nice session.</span> Take 2 minutes to reflect?
-          </p>
-          <p className="text-xs text-slate-500 mt-1">A prompt is waiting for you →</p>
-        </Card>
-      )}
-    </div>
-  )
+function getLevel(mins) {
+  return LEVELS.find(l => mins >= l.min && mins < l.max) || LEVELS[LEVELS.length - 1]
 }
 
 function greeting() {
@@ -119,7 +22,161 @@ function greeting() {
   return 'evening'
 }
 
-function nextLevel(current) {
-  const map = { Seed: 'Sprout', Sprout: 'Sapling', Sapling: 'Tree', Tree: 'Forest' }
-  return map[current] || ''
+export default function Home() {
+  const { state } = useApp()
+  const navigate = useNavigate()
+  const { streak, stats } = state
+
+  const today = new Date().toISOString().slice(0, 10)
+  const meditatedToday = state.sessions.some(s => s.date === today)
+  const journaledToday = state.journalEntries.some(e => e.date === today)
+
+  const lvl = getLevel(stats.totalMinutes)
+  const progressPct = lvl.max === Infinity
+    ? 100
+    : Math.round(((stats.totalMinutes - lvl.min) / (lvl.max - lvl.min)) * 100)
+
+  return (
+    <div className="min-h-screen pb-24 px-4 pt-10 max-w-lg mx-auto">
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <p className="text-slate-500 text-xs uppercase tracking-widest">Good {greeting()}</p>
+          <h1 className="text-2xl font-semibold text-white mt-0.5">SateKarma</h1>
+        </div>
+        <button
+          onClick={() => navigate('/stats')}
+          className="text-xs text-slate-400 hover:text-violet-400 transition-colors"
+        >
+          {lvl.emoji} {lvl.name}
+        </button>
+      </div>
+
+      {/* Streak hero */}
+      {streak.current > 0 ? (
+        <Card className="p-5 mb-4 flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center shrink-0">
+            <span className="text-2xl">🔥</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-3xl font-bold text-amber-400 leading-none">
+              {streak.current}
+              <span className="text-base font-normal text-slate-400 ml-1">day streak</span>
+            </p>
+            {streak.best > streak.current && (
+              <p className="text-xs text-slate-500 mt-1">Best: {streak.best} days</p>
+            )}
+            {streak.best <= streak.current && streak.current > 1 && (
+              <p className="text-xs text-teal-400 mt-1">Personal best! 🎉</p>
+            )}
+          </div>
+        </Card>
+      ) : (
+        <Card className="p-5 mb-4 border-dashed border-white/10">
+          <p className="text-sm text-slate-400">Start a session today to begin your streak 🔥</p>
+        </Card>
+      )}
+
+      {/* Quick start */}
+      <Card className="p-5 mb-4">
+        <Button
+          variant="primary"
+          size="lg"
+          className="w-full"
+          onClick={() => navigate('/timer')}
+        >
+          {meditatedToday ? 'Meditate again' : 'Start Meditation'}
+        </Button>
+        <div className="flex gap-4 justify-center mt-3">
+          <button
+            className="text-sm text-slate-500 hover:text-teal-400 transition-colors"
+            onClick={() => navigate('/breathe')}
+          >
+            Just breathe →
+          </button>
+          {meditatedToday && !journaledToday && (
+            <button
+              className="text-sm text-slate-500 hover:text-violet-400 transition-colors"
+              onClick={() => navigate('/journal/write')}
+            >
+              Write in journal →
+            </button>
+          )}
+        </div>
+      </Card>
+
+      {/* Today's checklist */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <Card
+          className="p-4 cursor-pointer"
+          onClick={() => !meditatedToday && navigate('/timer')}
+        >
+          <div className={`w-7 h-7 rounded-full flex items-center justify-center mb-2 ${meditatedToday ? 'bg-teal-500/20' : 'bg-white/5'}`}>
+            <span className="text-sm">{meditatedToday ? '✓' : '○'}</span>
+          </div>
+          <p className="text-xs text-slate-400">Meditate</p>
+          <p className={`text-sm font-medium mt-0.5 ${meditatedToday ? 'text-teal-400' : 'text-slate-500'}`}>
+            {meditatedToday ? 'Done' : 'Not yet'}
+          </p>
+        </Card>
+        <Card
+          className="p-4 cursor-pointer"
+          onClick={() => !journaledToday && navigate('/journal/write')}
+        >
+          <div className={`w-7 h-7 rounded-full flex items-center justify-center mb-2 ${journaledToday ? 'bg-violet-500/20' : 'bg-white/5'}`}>
+            <span className="text-sm">{journaledToday ? '✓' : '○'}</span>
+          </div>
+          <p className="text-xs text-slate-400">Journal</p>
+          <p className={`text-sm font-medium mt-0.5 ${journaledToday ? 'text-violet-400' : 'text-slate-500'}`}>
+            {journaledToday ? 'Done' : 'Not yet'}
+          </p>
+        </Card>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <Card className="p-4 text-center">
+          <p className="text-2xl font-bold text-violet-400">{stats.totalSessions}</p>
+          <p className="text-xs text-slate-400 mt-0.5">Total sessions</p>
+        </Card>
+        <Card className="p-4 text-center">
+          <p className="text-2xl font-bold text-teal-400">{stats.totalMinutes}</p>
+          <p className="text-xs text-slate-400 mt-0.5">Minutes meditated</p>
+        </Card>
+      </div>
+
+      {/* Level progress */}
+      {lvl.max !== Infinity && (
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-slate-300 font-medium">{lvl.emoji} {lvl.name}</span>
+            <span className="text-xs text-slate-500">
+              {lvl.max - stats.totalMinutes} min to {LEVELS[LEVELS.indexOf(lvl) + 1]?.name}
+            </span>
+          </div>
+          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-violet-500 to-teal-400 rounded-full transition-all duration-700"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </Card>
+      )}
+
+      {/* Post-session journal nudge */}
+      {meditatedToday && !journaledToday && (
+        <Card
+          className="mt-4 p-4 border-violet-500/30 cursor-pointer hover:border-violet-400/50 transition-colors"
+          onClick={() => navigate('/journal/write')}
+        >
+          <p className="text-sm text-slate-300">
+            <span className="text-violet-400 font-medium">Nice session.</span>{' '}
+            Take 2 minutes to reflect?
+          </p>
+          <p className="text-xs text-slate-500 mt-1">A prompt is waiting for you →</p>
+        </Card>
+      )}
+    </div>
+  )
 }
