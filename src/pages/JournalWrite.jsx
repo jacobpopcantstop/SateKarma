@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { pickPrompt } from '../utils/promptPicker'
@@ -17,27 +17,15 @@ export default function JournalWrite() {
   const location = useLocation()
   const sessionId = location.state?.sessionId || null
 
-  const [step, setStep] = useState('mood') // mood | prompt | done
+  const [step, setStep] = useState('mood')
   const [moodScore, setMoodScore] = useState(null)
   const [isFreeWrite, setIsFreeWrite] = useState(false)
-
-  const initialPrompt = useMemo(() =>
-    pickPrompt(
-      state.journalSettings.lastUsedPrompts,
-      null,
-      state.journalSettings.customPrompts,
-      state.journalSettings.favoritePromptTexts
-    ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  )
-
-  const [activePrompt, setActivePrompt] = useState(initialPrompt)
+  const [activePrompt, setActivePrompt] = useState(null)
   const [response, setResponse] = useState('')
 
   function handleMoodNext() {
     if (!moodScore) return
-    // Update prompt to be mood-aware
+    // Pick prompt now that we have the mood score
     setActivePrompt(
       pickPrompt(
         state.journalSettings.lastUsedPrompts,

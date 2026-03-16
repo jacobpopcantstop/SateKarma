@@ -23,7 +23,9 @@ export default function Journal() {
           e.prompt?.text?.toLowerCase().includes(q)
       )
     }
-    if (filterCategory !== 'all') {
+    if (filterCategory === 'freewrite') {
+      list = list.filter(e => e.isFreeWrite)
+    } else if (filterCategory !== 'all') {
       list = list.filter(e => e.prompt?.category === filterCategory)
     }
     return list

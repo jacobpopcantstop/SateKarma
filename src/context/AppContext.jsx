@@ -64,15 +64,18 @@ function computeStreak(sessions, currentStreak) {
   if (lastSessionDate === today) return currentStreak
 
   let newCurrent = current
+  let newFreezeUsed = false
+
   if (lastSessionDate === yesterday) {
     newCurrent = current + 1
   } else if (lastSessionDate === null) {
     newCurrent = 1
   } else {
-    // Missed a day — check freeze
+    // Missed a day — check if freeze can save the streak
     const twoDaysAgo = new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10)
     if (!freezeUsed && lastSessionDate === twoDaysAgo) {
       newCurrent = current + 1
+      newFreezeUsed = true  // mark freeze as consumed
     } else {
       newCurrent = 1
     }
@@ -82,7 +85,7 @@ function computeStreak(sessions, currentStreak) {
     current: newCurrent,
     best: Math.max(best, newCurrent),
     lastSessionDate: today,
-    freezeUsed: false,
+    freezeUsed: newFreezeUsed,
   }
 }
 
