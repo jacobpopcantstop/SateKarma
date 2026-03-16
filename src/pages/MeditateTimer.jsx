@@ -3,15 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { useTimer } from '../hooks/useTimer'
 import { playBell } from '../utils/sounds'
+import { generateId } from '../utils/helpers'
 import TimerRing from '../components/Timer/TimerRing'
 import TimerControls from '../components/Timer/TimerControls'
 import TimerSettings from '../components/Timer/TimerSettings'
 import Button from '../components/ui/Button'
-import Card from '../components/ui/Card'
-
-function generateId() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36)
-}
 
 export default function MeditateTimer() {
   const { state, dispatch } = useApp()
@@ -20,6 +16,10 @@ export default function MeditateTimer() {
   const [startTime, setStartTime] = useState(null)
   const [sessionComplete, setSessionComplete] = useState(false)
   const [completedSession, setCompletedSession] = useState(null)
+
+  const intervalSecs = state.settings.intervalBell
+    ? state.settings.intervalBell * 60
+    : null
 
   function handleComplete() {
     playBell(state.settings.bellSound)
@@ -39,7 +39,9 @@ export default function MeditateTimer() {
   const durationSeconds = duration * 60
   const { secondsLeft, progress, status, start, pause, resume, stop } = useTimer(
     durationSeconds,
-    handleComplete
+    handleComplete,
+    intervalSecs,
+    () => playBell(state.settings.bellSound),
   )
 
   function handleStart() {
@@ -50,7 +52,6 @@ export default function MeditateTimer() {
   function handleStop() {
     const elapsed = durationSeconds - secondsLeft
     if (elapsed >= 30) {
-      // Save partial session if at least 30 seconds elapsed
       const session = {
         id: generateId(),
         date: new Date().toISOString().slice(0, 10),
@@ -67,13 +68,22 @@ export default function MeditateTimer() {
   }
 
   if (sessionComplete && completedSession) {
+    const mins = Math.floor(completedSession.duration / 60)
+    const secs = completedSession.duration % 60
+    const timeStr = secs > 0 ? `${mins}m ${secs}s` : `${mins} minute${mins !== 1 ? 's' : ''}`
     return (
-      <div className="min-h-screen pb-24 px-4 pt-12 max-w-lg mx-auto flex flex-col items-center justify-center text-center">
-        <div className="text-5xl mb-4">🔔</div>
-        <h2 className="text-2xl font-semibold text-white mb-1">Session complete</h2>
-        <p className="text-slate-400 text-sm mb-8">
-          {Math.floor(completedSession.duration / 60)} minutes of stillness. Well done.
-        </p>
+      <div className="min-h-screen pb-36 flex flex-col items-center justify-center px-6 text-center fade-up">
+        {/* Completion glow */}
+        <div className="relative mb-8">
+          <div className="absolute inset-0 rounded-full bg-violet-500/20 blur-2xl scale-150" />
+          <div className="relative w-24 h-24 rounded-full glass flex items-center justify-center glow-violet">
+            <span className="text-4xl">🔔</span>
+          </div>
+        </div>
+
+        <h2 className="text-3xl font-light text-white mb-2 tracking-tight">Session complete</h2>
+        <p className="text-white/40 mb-10 text-sm tracking-wide">{timeStr} of stillness</p>
+
         <div className="flex flex-col gap-3 w-full max-w-xs">
           <Button
             variant="primary"
@@ -87,10 +97,7 @@ export default function MeditateTimer() {
             variant="secondary"
             size="lg"
             className="w-full"
-            onClick={() => {
-              setSessionComplete(false)
-              setCompletedSession(null)
-            }}
+            onClick={() => { setSessionComplete(false); setCompletedSession(null) }}
           >
             Meditate again
           </Button>
@@ -102,12 +109,25 @@ export default function MeditateTimer() {
     )
   }
 
-  return (
-    <div className="min-h-screen pb-24 px-4 pt-12 max-w-lg mx-auto flex flex-col items-center">
-      <h1 className="text-xl font-medium text-slate-300 mb-8">Meditation</h1>
+  const isRunning = status === 'running'
 
-      {/* Duration picker — only shown when idle */}
-      <div className="mb-8 w-full">
+  return (
+    <div className="min-h-screen pb-36 flex flex-col items-center px-4 pt-12">
+      {/* Title — fades out while running */}
+      <h1
+        className={`text-sm font-medium tracking-[0.25em] uppercase text-white/40 mb-10 transition-opacity duration-500 ${
+          isRunning ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
+        Meditation
+      </h1>
+
+      {/* Duration picker */}
+      <div
+        className={`mb-10 w-full max-w-sm transition-all duration-500 ${
+          status !== 'idle' ? 'opacity-0 pointer-events-none h-0 mb-0 overflow-hidden' : 'opacity-100'
+        }`}
+      >
         <TimerSettings
           duration={duration}
           onDurationChange={setDuration}
@@ -115,18 +135,19 @@ export default function MeditateTimer() {
         />
       </div>
 
-      {/* Timer ring */}
-      <TimerRing progress={progress} secondsLeft={secondsLeft} />
+      {/* Ring */}
+      <div className={`transition-all duration-700 ${isRunning ? 'mt-8' : ''}`}>
+        <TimerRing progress={progress} secondsLeft={secondsLeft} />
+      </div>
 
-      {/* Status label */}
-      <p className="text-sm text-slate-400 mt-4 h-5">
-        {status === 'idle' && 'Choose a duration and begin'}
-        {status === 'running' && 'Breathe. You\'re doing great.'}
-        {status === 'paused' && 'Paused — resume when ready'}
-        {status === 'done' && 'Complete'}
+      {/* Status hint */}
+      <p className="text-sm text-white/25 mt-6 h-5 tracking-widest uppercase text-center">
+        {status === 'idle' && 'choose a duration'}
+        {status === 'running' && ''}
+        {status === 'paused' && 'paused'}
+        {status === 'done' && 'complete'}
       </p>
 
-      {/* Controls */}
       <TimerControls
         status={status}
         onStart={handleStart}
@@ -135,10 +156,9 @@ export default function MeditateTimer() {
         onStop={handleStop}
       />
 
-      {/* Quick-link to breathing */}
       {status === 'idle' && (
         <button
-          className="mt-8 text-sm text-slate-500 hover:text-teal-400 transition-colors"
+          className="mt-10 text-xs text-white/25 hover:text-teal-400/80 transition-colors tracking-widest uppercase"
           onClick={() => navigate('/breathe')}
         >
           Breathe first →

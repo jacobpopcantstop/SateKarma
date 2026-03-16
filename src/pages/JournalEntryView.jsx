@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { PROMPT_CATEGORIES } from '../data/prompts'
+import { formatDateLong, formatDate } from '../utils/helpers'
 import Button from '../components/ui/Button'
 
 const MOOD_EMOJIS = ['', '😔', '😕', '😐', '🙂', '😊']
@@ -36,7 +37,7 @@ export default function JournalEntryView() {
 
   function exportEntry() {
     const lines = [
-      `# Journal Entry — ${formatDate(entry.date)}`,
+      `# Journal Entry — ${formatDateLong(entry.date)}`,
       '',
       entry.prompt && !entry.isFreeWrite ? `> ${entry.prompt.text}` : '> Free write',
       '',
@@ -75,7 +76,7 @@ export default function JournalEntryView() {
       <div className="flex items-center gap-3 mb-4">
         <span className="text-2xl">{MOOD_EMOJIS[entry.moodScore] || ''}</span>
         <div>
-          <p className="text-white font-medium">{formatDate(entry.date)}</p>
+          <p className="text-white font-medium">{formatDateLong(entry.date)}</p>
           <p className="text-xs text-slate-500">
             {entry.moodScore ? `Feeling ${MOOD_LABELS[entry.moodScore].toLowerCase()}` : ''}
             {categoryLabel ? ` · ${categoryLabel}` : ''}
@@ -128,6 +129,7 @@ function OnThisDay({ currentId, date, entries }) {
         {pastEntries.map(e => (
           <div key={e.id} className="text-sm">
             <p className="text-slate-500 mb-1">{formatDate(e.date)}</p>
+
             <p className="text-slate-400 line-clamp-2">{e.response}</p>
           </div>
         ))}
@@ -136,7 +138,3 @@ function OnThisDay({ currentId, date, entries }) {
   )
 }
 
-function formatDate(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00')
-  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-}

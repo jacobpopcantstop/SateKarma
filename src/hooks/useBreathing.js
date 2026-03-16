@@ -36,48 +36,60 @@ export function useBreathing(patternKey = 'box') {
   const [phaseIndex, setPhaseIndex] = useState(0)
   const [phaseSecond, setPhaseSecond] = useState(0)
   const [cycles, setCycles] = useState(0)
+
   const timerRef = useRef(null)
-
-  const currentPhase = pattern.phases[phaseIndex]
-  const expanded = currentPhase.name === 'Breathe in'
-  const held = currentPhase.name === 'Hold'
-
-  // Fraction through current phase (0–1), used for smooth animation
-  const phaseFraction = phaseSecond / currentPhase.duration
+  // Refs so the interval always reads current values without stale closures
+  const phaseIndexRef = useRef(0)
+  const phaseSecondRef = useRef(0)
+  const patternRef = useRef(pattern)
+  patternRef.current = pattern
 
   useEffect(() => {
     return () => clearInterval(timerRef.current)
   }, [])
 
   const start = useCallback(() => {
+    phaseIndexRef.current = 0
+    phaseSecondRef.current = 0
     setPhaseIndex(0)
     setPhaseSecond(0)
     setCycles(0)
     setRunning(true)
 
     timerRef.current = setInterval(() => {
-      setPhaseSecond(prev => {
-        const phase = pattern.phases[phaseIndex]
-        if (prev + 1 >= phase.duration) {
-          setPhaseIndex(pi => {
-            const next = (pi + 1) % pattern.phases.length
-            if (next === 0) setCycles(c => c + 1)
-            return next
-          })
-          return 0
-        }
-        return prev + 1
-      })
+      const phases = patternRef.current.phases
+      const currentDuration = phases[phaseIndexRef.current].duration
+      const nextSecond = phaseSecondRef.current + 1
+
+      if (nextSecond >= currentDuration) {
+        // Advance to the next phase
+        const nextPhaseIndex = (phaseIndexRef.current + 1) % phases.length
+        if (nextPhaseIndex === 0) setCycles(c => c + 1)
+        phaseIndexRef.current = nextPhaseIndex
+        phaseSecondRef.current = 0
+        setPhaseIndex(nextPhaseIndex)
+        setPhaseSecond(0)
+      } else {
+        phaseSecondRef.current = nextSecond
+        setPhaseSecond(nextSecond)
+      }
     }, 1000)
-  }, [pattern, phaseIndex])
+  }, [])
 
   const stop = useCallback(() => {
     clearInterval(timerRef.current)
+    phaseIndexRef.current = 0
+    phaseSecondRef.current = 0
     setRunning(false)
     setPhaseIndex(0)
     setPhaseSecond(0)
     setCycles(0)
   }, [])
+
+  const currentPhase = pattern.phases[phaseIndex]
+  const expanded = currentPhase.name === 'Breathe in'
+  const held = currentPhase.name === 'Hold'
+  const phaseFraction = phaseSecond / currentPhase.duration
 
   return {
     running,
