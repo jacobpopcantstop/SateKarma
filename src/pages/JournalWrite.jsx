@@ -43,7 +43,7 @@ export default function JournalWrite() {
       prompt: isFreeWrite ? null : activePrompt,
       response: response.trim(),
       isFreeWrite,
-      isFavoritePrompt: state.journalSettings.favoritePromptTexts.includes(activePrompt?.text),
+      isFavoritePrompt: isFreeWrite ? false : state.journalSettings.favoritePromptTexts.includes(activePrompt?.text),
       createdAt: new Date().toISOString(),
     }
     dispatch({ type: 'ADD_JOURNAL_ENTRY', payload: entry })

@@ -70,6 +70,12 @@ export default function Home() {
             {streak.best <= streak.current && streak.current > 1 && (
               <p className="text-xs text-teal-400 mt-1">Personal best! 🎉</p>
             )}
+            {streak.freezeUsed && (
+              <p className="text-xs text-blue-400 mt-1">❄️ Streak freeze used yesterday</p>
+            )}
+            {!streak.freezeUsed && streak.current > 0 && (
+              <p className="text-xs text-slate-600 mt-1">❄️ Freeze available</p>
+            )}
           </div>
         </Card>
       ) : (

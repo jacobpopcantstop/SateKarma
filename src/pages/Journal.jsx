@@ -5,8 +5,6 @@ import JournalEntry from '../components/Journal/JournalEntry'
 import Button from '../components/ui/Button'
 import { PROMPT_CATEGORIES } from '../data/prompts'
 
-const MOOD_EMOJIS = ['', '😔', '😕', '😐', '🙂', '😊']
-
 export default function Journal() {
   const { state } = useApp()
   const navigate = useNavigate()
@@ -50,12 +48,22 @@ export default function Journal() {
       />
 
       {/* Category filter */}
-      <div className="flex gap-2 overflow-x-auto pb-1 mb-5 scrollbar-hide">
-        <FilterChip label="All" active={filterCategory === 'all'} onClick={() => setFilterCategory('all')} />
-        {Object.entries(PROMPT_CATEGORIES).map(([key, { label }]) => (
-          <FilterChip key={key} label={label} active={filterCategory === key} onClick={() => setFilterCategory(key)} />
-        ))}
-        <FilterChip label="Free write" active={filterCategory === 'freewrite'} onClick={() => setFilterCategory('freewrite')} />
+      <div className="flex items-center gap-2 mb-5">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide flex-1">
+          <FilterChip label="All" active={filterCategory === 'all'} onClick={() => setFilterCategory('all')} />
+          {Object.entries(PROMPT_CATEGORIES).map(([key, { label }]) => (
+            <FilterChip key={key} label={label} active={filterCategory === key} onClick={() => setFilterCategory(key)} />
+          ))}
+          <FilterChip label="Free write" active={filterCategory === 'freewrite'} onClick={() => setFilterCategory('freewrite')} />
+        </div>
+        {(filterCategory !== 'all' || search.trim()) && (
+          <button
+            className="shrink-0 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+            onClick={() => { setFilterCategory('all'); setSearch('') }}
+          >
+            Clear ✕
+          </button>
+        )}
       </div>
 
       {/* Entry list */}

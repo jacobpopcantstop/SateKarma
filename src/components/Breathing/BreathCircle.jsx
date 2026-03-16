@@ -2,7 +2,7 @@ export default function BreathCircle({ expanded, held, currentPhase, phaseSecond
   const countDown = currentPhase.duration - phaseSecond
   const isExhale = currentPhase.name === 'Breathe out'
   const isHold = currentPhase.name === 'Hold'
-  const dur = `${currentPhase.duration * 0.88}s`
+  const dur = `${currentPhase.duration}s`
 
   // Colour shifts: violet on inhale, teal on exhale, lavender on hold
   const coreColor = isExhale

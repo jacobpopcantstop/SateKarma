@@ -16,6 +16,7 @@ export default function MeditateTimer() {
   const [startTime, setStartTime] = useState(null)
   const [sessionComplete, setSessionComplete] = useState(false)
   const [completedSession, setCompletedSession] = useState(null)
+  const [confirmStop, setConfirmStop] = useState(false)
 
   const intervalSecs = state.settings.intervalBell
     ? state.settings.intervalBell * 60
@@ -51,6 +52,16 @@ export default function MeditateTimer() {
 
   function handleStop() {
     const elapsed = durationSeconds - secondsLeft
+    if (elapsed < 30) {
+      // Too short to save — confirm before discarding
+      setConfirmStop(true)
+      return
+    }
+    commitStop(elapsed)
+  }
+
+  function commitStop(elapsed) {
+    if (elapsed === undefined) elapsed = durationSeconds - secondsLeft
     if (elapsed >= 30) {
       const session = {
         id: generateId(),
@@ -65,6 +76,7 @@ export default function MeditateTimer() {
       setSessionComplete(true)
     }
     stop()
+    setConfirmStop(false)
   }
 
   if (sessionComplete && completedSession) {
@@ -155,6 +167,24 @@ export default function MeditateTimer() {
         onResume={resume}
         onStop={handleStop}
       />
+
+      {/* Confirm discard short session */}
+      {confirmStop && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center pb-12 px-6">
+          <div className="glass rounded-2xl p-5 w-full max-w-xs text-center">
+            <p className="text-sm text-slate-300 mb-1">End session?</p>
+            <p className="text-xs text-slate-500 mb-5">Sessions under 30s won't be saved.</p>
+            <div className="flex gap-3">
+              <Button variant="ghost" size="md" className="flex-1" onClick={() => setConfirmStop(false)}>
+                Keep going
+              </Button>
+              <Button variant="secondary" size="md" className="flex-1" onClick={() => { stop(); setConfirmStop(false) }}>
+                End
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {status === 'idle' && (
         <button
